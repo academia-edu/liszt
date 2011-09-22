@@ -46,6 +46,7 @@ module Liszt
             end
 
       ordered_list(obj).clear_and_populate!(ids)
+      ids
     end
 
     def ordered_list(obj={})
@@ -57,12 +58,25 @@ module Liszt
     end
 
     def ordered_list_ids(obj={})
+      return nil unless ordered_list_initialized?(obj)
       ordered_list(obj).all
     end
 
-    def ordered_list_items(obj={})
+    def ordered_list_items(obj={}, double_check=false)
+      return nil unless ordered_list_initialized?(obj)
       ids = ordered_list_ids(obj)
-      objs = find_all_by_id(ids)
+
+      if double_check
+        objs = find(:all, :conditions => liszt_query(obj))
+        real_ids = objs.map(&:id)
+        if real_ids != ids
+          unlisted_ids = real_ids - ids
+          ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
+        end
+      else
+        objs = find_all_by_id(ids)
+      end
+
       objs.sort_by { |obj| ids.index(obj.id) }
     end
 

@@ -8,12 +8,14 @@ module Liszt
     # Remove existing list items and repopulate the list with the given ids
     # (in the given order).
     # @param [Array<Fixnum>] ids
+    # @return [Array<Fixnum>]
     def clear_and_populate!(ids, &block)
       redis.multi do
         clear
         # reverse and unshift to avoid touching the marker
         ids.reverse.each { |id| unshift!(id) }
       end
+      ids
     end
 
     # Has the list been initialized?
