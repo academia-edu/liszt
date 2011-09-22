@@ -33,9 +33,19 @@ module Liszt
   end
 
   module ClassMethods
-    def initialize_list!(obj={})
+    def initialize_list!(obj={}, &block)
       objects = find(:all, :conditions => liszt_query(obj))
-      ordered_list(obj).clear_and_populate!(objects.sort_by(&:id))
+
+      # If the caller provided a block, sort the objects by that block's
+      # output before populating the list with their ids. If not, put
+      # the objects in descending order by id.
+      ids = if block_given?
+              objects.sort_by(&block).map(&:id)
+            else
+              objects.map(&:id).sort.reverse
+            end
+
+      ordered_list(obj).clear_and_populate!(ids)
     end
 
     def ordered_list(obj={})
