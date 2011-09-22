@@ -17,4 +17,8 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = false
 end
 
-task :default => :test
+task :test_rails_2 do
+  system("env BUNDLE_GEMFILE=Gemfile.rails2 bundle exec rake test")
+end
+
+task :default => [:test, :test_rails_2]
