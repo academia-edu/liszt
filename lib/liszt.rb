@@ -69,8 +69,8 @@ module Liszt
       if double_check
         objs = find(:all, :conditions => liszt_query(obj))
         real_ids = objs.map(&:id)
-        if real_ids != ids
-          unlisted_ids = real_ids - ids
+        unlisted_ids = real_ids - ids
+        if unlisted_ids.count > 0
           ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
         end
       else
@@ -136,7 +136,7 @@ module Liszt
 
     def add_to_list
       if meets_list_conditions?
-        ordered_list.unshift(self)
+        ordered_list.unshift(self.id)
       end
       true
     end
