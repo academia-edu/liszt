@@ -40,5 +40,4 @@ Rails::Initializer.run do |config|
   # config.i18n.default_locale = :de
 end
 
-Bundler.require
-require 'liszt'
+Liszt.redis = Redis.new(:host => "localhost", :port => "10001")

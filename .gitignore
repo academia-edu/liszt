@@ -11,3 +11,4 @@ test/dummy_3.1/tmp/
 .yardoc/
 .rvmrc
 /tags
+/dump.rdb

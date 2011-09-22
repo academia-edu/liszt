@@ -3,7 +3,9 @@ require File.expand_path('../boot', __FILE__)
 require 'rails/all'
 
 Bundler.require
+require "redis"
 require "liszt"
+require "shoulda-context"
 
 module Dummy
   class Application < Rails::Application
@@ -40,3 +42,4 @@ module Dummy
   end
 end
 
+Liszt.redis = Redis.new(:host => "localhost", :port => "10001")
