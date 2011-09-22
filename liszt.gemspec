@@ -18,4 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'rails', '>= 2.3.2'
   s.add_runtime_dependency 'redis'
+
+  s.add_development_dependency 'yard'
+  s.add_development_dependency 'rdiscount'
 end

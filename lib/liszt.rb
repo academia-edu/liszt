@@ -5,23 +5,16 @@ require "liszt/list"
 module Liszt
   mattr_accessor :redis
 
+  # Set up a scoped ordering for this model.
   #
-  # Accepts the following options:
-  #   :scope      => An attribute or array of attributes to use as list constraints.
-  #   :conditions => Any extra constraints to impose.
+  # Liszt currently only supports one type of ranking per model. It also doesn't
+  # currently support re-sorting lists when a scope changes. The assumption is
+  # that attributes used as scopes won't change after creation.
   #
-  # Usage:
-  #   To create a Redis list with the key 'liszt:documents:user_id:200',
-  #
-  #     class Document < ActiveRecord::Base
-  #       acts_as_liszt :scope => :user_id
-  #     end
-  #
-  # Liszt currently only supports one type of ranking per model.
-  #
-  # It also doesn't currently support re-sorting lists when a scope changes. The
-  # assumption is that attributes used as scopes won't change after creation.
-  #
+  # @param [Hash] options
+  # @option options [Symbol, Array] :scope The attribute or attributes to use
+  #   as list constraints.
+  # @option options [Hash] :conditions Any extra constraints to impose.
   def acts_as_liszt(options = {})
     extend Instantizeable
     extend ClassMethods
@@ -49,12 +42,16 @@ module Liszt
       Liszt::List.new(liszt_key(obj))
     end
 
+    def ordered_list_initialized?(obj={})
+      ordered_list(obj).initialized?
+    end
+
     def ordered_list_ids(obj={})
-      ordered_list(obj).to_a
+      ordered_list(obj).all
     end
 
     def ordered_list_items(obj={})
-      ids = ordered_list_ids(obj).map(&:to_i)
+      ids = ordered_list_ids(obj)
       objs = find_all_by_id(ids)
       objs.sort_by { |obj| ids.index(obj.id) }
     end
@@ -117,6 +114,7 @@ module Liszt
       if meets_list_conditions?
         ordered_list.unshift(self)
       end
+      true
     end
 
     def update_list
@@ -125,26 +123,28 @@ module Liszt
       else
         remove_from_list
       end
+      true
     end
 
     def remove_from_list
-      ordered_list.remove(self)
+      ordered_list.remove(self.id)
+      true
     end
 
     def move_to_top!
-      ordered_list.move_to_top(self)
+      ordered_list.move_to_top(self.id)
     end
 
     def move_up!
-      ordered_list.move_up(self)
+      ordered_list.move_up(self.id)
     end
 
     def move_down!
-      ordered_list.move_down(self)
+      ordered_list.move_down(self.id)
     end
 
     def move_to_bottom!
-      ordered_list.move_to_bottom(self)
+      ordered_list.move_to_bottom(self.id)
     end
   end
 end
