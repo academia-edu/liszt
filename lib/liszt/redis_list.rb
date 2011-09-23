@@ -5,11 +5,16 @@ module Liszt
       @key = key
     end
 
+    # Completely delete the list from Redis, leaving no marker.
+    def uninitialize
+      redis.del(@key)
+    end
+
     # Remove existing list items and repopulate the list with the given ids
     # (in the given order).
     # @param [Array<Fixnum>] ids
     # @return [Array<Fixnum>]
-    def clear_and_populate!(ids, &block)
+    def clear_and_populate!(ids)
       redis.multi do
         clear
         # reverse and unshift to avoid touching the marker
@@ -21,7 +26,7 @@ module Liszt
     # Has the list been initialized?
     # @return [Boolean]
     def initialized?
-      !length.nil?
+      redis.exists(@key)
     end
 
     # Does the list currently include this id?
@@ -181,17 +186,17 @@ module Liszt
       def with_lock
         start_time = Time.now
         until get_lock
-          sleep 0.25
-          raise "Timed out!" if (Time.now - start_time) > 2.0
+          sleep 0.2
+          raise "Timed out!" if (Time.now - start_time) > 10
         end
         yield
       ensure
         release_lock
       end
 
-      def get_lock
+      def get_lock(timeout=lock_expiration_time)
         if redis.setnx(lock_key, true)
-          redis.expire(lock_key, lock_expiration_time)
+          redis.expire(lock_key, timeout)
           true
         else
           false

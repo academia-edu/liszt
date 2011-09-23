@@ -1,6 +1,6 @@
 require "liszt/version"
 require "liszt/instantizeable"
-require "liszt/list"
+require "liszt/redis_list"
 
 module Liszt
   mattr_accessor :redis
@@ -10,6 +10,10 @@ module Liszt
   # Liszt currently only supports one type of ranking per model. It also doesn't
   # currently support re-sorting lists when a scope changes. The assumption is
   # that attributes used as scopes won't change after creation.
+  #
+  # The other major limitation at the moment is that scopes can't be <tt>nil</tt>.
+  # If a record has nil for a scope value, its associated list will never have
+  # any items in it.
   #
   # @param [Hash] options
   # @option options [Symbol, Array] :scope The attribute or attributes to use
@@ -28,7 +32,7 @@ module Liszt
     options.reverse_merge! :conditions => {}, :scope => []
 
     @liszt_conditions = options[:conditions]
-    @liszt_scope = Array(options[:scope]).sort
+    @liszt_scope = Array(options[:scope]).sort_by(&:to_s)
     @liszt_query = nil
   end
 
@@ -50,7 +54,7 @@ module Liszt
     end
 
     def ordered_list(obj={})
-      Liszt::List.new(liszt_key(obj))
+      Liszt::RedisList.new(liszt_key(obj))
     end
 
     def ordered_list_initialized?(obj={})
