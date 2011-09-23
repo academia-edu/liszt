@@ -17,6 +17,11 @@ class LisztTest < ActiveSupport::TestCase
       assert_nothing_raised { people(:nelson).initialize_list! }
       assert people(:nelson).ordered_list_initialized?
     end
+
+    should "auto-initialize successfully" do
+      assert_nothing_raised { people(:nelson).ordered_list_ids }
+      assert people(:nelson).ordered_list_initialized?
+    end
   end
 
   context "after initialization" do

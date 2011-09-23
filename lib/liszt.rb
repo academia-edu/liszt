@@ -44,7 +44,8 @@ module Liszt
     def initialize_list!(obj={}, &block)
       objects = find(:all, :conditions => liszt_query(obj))
 
-      # If the caller provided a block, sort the objects by that block's
+      # If the caller provided a block, or if they passed in a default
+      # with the :sort_by option, sort the objects by that block's
       # output before populating the list with their ids. If not, put
       # the objects in descending order by id.
       ids = if block_given?
@@ -70,15 +71,20 @@ module Liszt
     end
 
     def ordered_list_ids(obj={})
-      return nil unless ordered_list_initialized?(obj)
-      ordered_list(obj).all
+      if ordered_list_initialized?(obj)
+        ordered_list(obj).all
+      else
+        initialize_list!(obj)
+      end
     end
 
     def ordered_list_items(obj={}, double_check=false)
-      return nil unless ordered_list_initialized?(obj)
+      was_initialized = ordered_list_initialized?(obj)
       ids = ordered_list_ids(obj)
 
-      if double_check
+      # If ordered_list_ids just did the initialization, we can trust that
+      # the list of ids is accurate and ignore the double_check flag.
+      if double_check and was_initialized
         objs = find(:all, :conditions => liszt_query(obj))
         real_ids = objs.map(&:id)
         unlisted_ids = real_ids - ids
