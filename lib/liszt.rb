@@ -19,6 +19,9 @@ module Liszt
   # @option options [Symbol, Array] :scope The attribute or attributes to use
   #   as list constraints.
   # @option options [Hash] :conditions Any extra constraints to impose.
+  # @option options [Proc] :sort_by A lambda to pass into initialize_list! the first
+  #   time an item is added to an uninitialized list. It has the same semantics as
+  #   <tt>Enumerable#sort_by</tt>.
   def acts_as_liszt(options = {})
     extend Instantizeable
     extend ClassMethods
@@ -34,6 +37,7 @@ module Liszt
     @liszt_conditions = options[:conditions]
     @liszt_scope = Array(options[:scope]).sort_by(&:to_s)
     @liszt_query = nil
+    @liszt_sort_by = options[:sort_by]
   end
 
   module ClassMethods
@@ -46,7 +50,11 @@ module Liszt
       ids = if block_given?
               objects.sort_by(&block).map(&:id)
             else
-              objects.map(&:id).sort.reverse
+              if @lizst_sort_by
+                objects.sort_by(&@lizst_sort_by).map(&:id)
+              else
+                objects.map(&:id).sort.reverse
+              end
             end
 
       ordered_list(obj).clear_and_populate!(ids)
@@ -139,8 +147,16 @@ module Liszt
     end
 
     def add_to_list
-      if meets_list_conditions?
-        ordered_list.unshift(self.id)
+      if ordered_list_initialized?
+        if meets_list_conditions?
+          ordered_list.unshift(self.id)
+        end
+      else
+        if @liszt_sort_by
+          initialize_list!(&@liszt_sort_by)
+        else
+          initialize_list!
+        end
       end
       true
     end
