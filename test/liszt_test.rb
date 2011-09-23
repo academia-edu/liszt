@@ -102,22 +102,22 @@ class LisztTest < ActiveSupport::TestCase
 
   context "auto-initialization" do
     setup do
-      Group.acts_as_liszt :sort_by => lambda { |o| -o.id }
+      Group.acts_as_liszt :sort_by => lambda { |o| o.id }
     end
 
     should "sort a newly initialized list with the given proc" do
       assert !Group.ordered_list_initialized?
       Group.initialize_list!
       assert Group.ordered_list_initialized?
-      assert_equal Group.ordered_list_ids, [3, 2, 1]
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
     end
 
     should "sort a newly auto-initialized list with the given proc" do
       g = Group.new
-      assert !g.ordered_list_initialized?
+      assert !Group.ordered_list_initialized?
       g.save
-      assert g.ordered_list_initialized?
-      assert_equal g.ordered_list_ids, [g.id, 3, 2, 1]
+      assert Group.ordered_list_initialized?
+      assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
     end
   end
 end

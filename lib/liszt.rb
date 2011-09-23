@@ -50,8 +50,8 @@ module Liszt
       ids = if block_given?
               objects.sort_by(&block).map(&:id)
             else
-              if @lizst_sort_by
-                objects.sort_by(&@lizst_sort_by).map(&:id)
+              if @liszt_sort_by
+                objects.sort_by(&@liszt_sort_by).map(&:id)
               else
                 objects.map(&:id).sort.reverse
               end
