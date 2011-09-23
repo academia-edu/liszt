@@ -1,5 +1,5 @@
 module Liszt
-  class List
+  class RedisList
     # @param [String] key The Redis key associated with this list.
     def initialize(key)
       @key = key
