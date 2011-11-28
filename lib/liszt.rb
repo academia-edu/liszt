@@ -78,13 +78,14 @@ module Liszt
       end
     end
 
-    def ordered_list_items(obj={}, double_check=false)
+    def ordered_list_items(obj={}, opts={})
+      force_refresh = opts.delete(:force_refresh) || false
       was_initialized = ordered_list_initialized?(obj)
       ids = ordered_list_ids(obj)
 
       # If ordered_list_ids just did the initialization, we can trust that
-      # the list of ids is accurate and ignore the double_check flag.
-      if double_check and was_initialized
+      # the list of ids is accurate and ignore the force_refresh flag.
+      if force_refresh and was_initialized
         objs = find(:all, :conditions => liszt_query(obj))
         real_ids = objs.map(&:id)
         unlisted_ids = real_ids - ids
@@ -92,7 +93,7 @@ module Liszt
           ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
         end
       else
-        objs = find_all_by_id(ids)
+        objs = find(:all, {:conditions => ['id in (?)', ids]}.merge(opts))
       end
 
       objs.sort_by { |obj| ids.index(obj.id) }

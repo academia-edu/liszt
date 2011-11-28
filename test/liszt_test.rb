@@ -83,24 +83,29 @@ class LisztTest < ActiveSupport::TestCase
       end
     end
 
-    context "double_check" do
+    context "options" do
       setup do
         Person.initialize_list!(:group_id => 1, :is_male => true)
         @person = Person.new(:name => "John Smith", :group_id => 1, :is_male => true)
       end
 
-      should "not confirm the list when double_check=false" do
+      should "not confirm the list when force_refresh is nil" do
         @person.save
         @person.remove_from_list
         assert !@person.ordered_list_items.include?(@person)
         assert !@person.ordered_list_ids.include?(@person.id)
       end
 
-      should "confirm the list when double_check=true" do
+      should "confirm the list when force_refresh is true" do
         @person.save
         @person.remove_from_list
-        assert @person.ordered_list_items(true).include?(@person)
+        assert @person.ordered_list_items(:force_refresh => true).include?(@person)
         assert @person.ordered_list_ids.include?(@person.id)
+      end
+
+      should "pass any other options through to the ActiveRecord query" do
+        @person.save
+        assert @person.ordered_list_items(:limit => 2).count == 2
       end
     end
   end
