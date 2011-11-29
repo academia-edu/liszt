@@ -86,7 +86,7 @@ module Liszt
       # If ordered_list_ids just did the initialization, we can trust that
       # the list of ids is accurate and ignore the force_refresh flag.
       if force_refresh and was_initialized
-        objs = find(:all, :conditions => liszt_query(obj))
+        objs = find(:all, {:conditions => liszt_query(obj)}.merge(opts))
         real_ids = objs.map(&:id)
         unlisted_ids = real_ids - ids
         if unlisted_ids.count > 0
