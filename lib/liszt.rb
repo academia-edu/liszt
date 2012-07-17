@@ -38,9 +38,16 @@ module Liszt
     @liszt_scope = Array(options[:scope]).sort_by(&:to_s)
     @liszt_query = nil
     @liszt_sort_by = options[:sort_by]
+    @liszt_append_new_items = options[:append_new_items]
   end
 
   module ClassMethods
+    def self.extended(base)
+      class << base
+        attr_reader :liszt_sort_by, :liszt_append_new_items
+      end
+    end
+
     def initialize_list!(obj={}, &block)
       objects = find(:all, :conditions => liszt_query(obj))
 
@@ -156,11 +163,15 @@ module Liszt
     def add_to_list
       if ordered_list_initialized?
         if meets_list_conditions?
-          ordered_list.unshift(self.id)
+          if self.class.liszt_append_new_items
+            ordered_list.push id
+          else
+            ordered_list.unshift id
+          end
         end
       else
-        if @liszt_sort_by
-          initialize_list!(&@liszt_sort_by)
+        if self.class.liszt_sort_by
+          initialize_list! &self.class.liszt_sort_by
         else
           initialize_list!
         end
@@ -178,24 +189,24 @@ module Liszt
     end
 
     def remove_from_list
-      ordered_list.remove(self.id)
+      ordered_list.remove id
       true
     end
 
     def move_to_top!
-      ordered_list.move_to_top(self.id)
+      ordered_list.move_to_top id
     end
 
     def move_up!
-      ordered_list.move_up(self.id)
+      ordered_list.move_up id
     end
 
     def move_down!
-      ordered_list.move_down(self.id)
+      ordered_list.move_down id
     end
 
     def move_to_bottom!
-      ordered_list.move_to_bottom(self.id)
+      ordered_list.move_to_bottom id
     end
   end
 end
