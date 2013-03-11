@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require "test/unit"
-require "shoulda-context"
+require "minitest/autorun"
+require "minitest/spec"
 require "liszt"
 require "redis"
 
@@ -74,7 +74,25 @@ class Person < ActiveRecord::Base
   acts_as_liszt :scope => [:group_id, :is_male]
 end
 
-class Liszt::TestCase < ActiveSupport::TestCase
+class MiniTest::Spec
+  class << self
+    def setup(symbol = nil, &block)
+      if symbol
+        before { send symbol }
+      else
+        before &block
+      end
+    end
+
+    def teardown(symbol = nil, &block)
+      if symbol
+        after { send symbol }
+      else
+        after &block
+      end
+    end
+  end
+
   include ActiveRecord::TestFixtures
 
   self.use_instantiated_fixtures = true
