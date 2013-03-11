@@ -2,12 +2,8 @@
 log/*.log
 pkg/
 doc/
-test/dummy_2.3/db/*.sqlite3
-test/dummy_2.3/log/*.log
-test/dummy_2.3/tmp/
-test/dummy_3.1/db/*.sqlite3
-test/dummy_3.1/log/*.log
-test/dummy_3.1/tmp/
+test/app/log/*.log
+test/app/tmp/
 .yardoc/
 .rvmrc
 /tags

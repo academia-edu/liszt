@@ -1,8 +1,0 @@
-source "http://rubygems.org"
-
-gem 'rails', '2.3.14'
-gem 'sqlite3'
-gem 'shoulda-context'
-
-# Specify your gem's dependencies in has_rank.gemspec
-gemspec

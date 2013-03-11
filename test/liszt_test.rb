@@ -1,9 +1,6 @@
 require 'test_helper'
 
-class LisztTest < ActiveSupport::TestCase
-  fixtures :groups
-  fixtures :people
-
+class LisztTest < Liszt::TestCase
   setup do
     Liszt.redis.flushall
   end

@@ -2,8 +2,12 @@ require "liszt/version"
 require "liszt/instantizeable"
 require "liszt/redis_list"
 
+require "active_record"
+
 module Liszt
-  mattr_accessor :redis
+  class << self
+    attr_accessor :redis
+  end
 
   # Set up a scoped ordering for this model.
   #

@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RedisListTest < ActiveSupport::TestCase
+class RedisListTest < Liszt::TestCase
   context "the Redis list wrapper" do
     setup do
       Liszt.redis.flushall

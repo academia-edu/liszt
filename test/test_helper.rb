@@ -1,15 +1,13 @@
-# Configure Rails Environment
-ENV["RAILS_ENV"] = "test"
+# encoding: UTF-8
 
-if ENV["BUNDLE_GEMFILE"] =~ /rails2/
-  require File.expand_path("../dummy_2.3/config/environment.rb",  __FILE__)
-  require 'test_help'
-else
-  require File.expand_path("../dummy_3.1/config/environment.rb",  __FILE__)
-  require "rails/test_help"
-end
+require "test/unit"
+require "shoulda-context"
+require "liszt"
+require "redis"
 
-if ENV["DEBUG_REDIS"] =~ /y/
+Liszt.redis = Redis.new(:host => "localhost", :port => "10001")
+
+if ENV['DEBUG_REDIS']
   class Redis
     module Connection
       class Ruby
@@ -41,7 +39,47 @@ class Array
   end
 end
 
-Rails.backtrace_cleaner.remove_silencers!
+# set up in-memory database
 
-# Load support files
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
+ENV['RAILS_ENV'] ||= 'test'
+
+require "active_record"
+require "active_record/test_case"
+
+ActiveRecord::Base.configurations = {
+  "test" => { "adapter" => "sqlite3", "database" => ":memory:" }
+}
+
+ActiveRecord::Base.establish_connection "test"
+
+ActiveRecord::Schema.define do
+  create_table "groups", :force => true do |t|
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "people", :force => true do |t|
+    t.string   "name"
+    t.integer  "group_id"
+    t.boolean  "is_male"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+end
+
+class Group < ActiveRecord::Base
+end
+
+class Person < ActiveRecord::Base
+  acts_as_liszt :scope => [:group_id, :is_male]
+end
+
+class Liszt::TestCase < ActiveSupport::TestCase
+  include ActiveRecord::TestFixtures
+
+  self.use_instantiated_fixtures = true
+  self.use_transactional_fixtures = false
+  self.fixture_path = "test/fixtures"
+
+  fixtures :groups, :people
+end
