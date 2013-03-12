@@ -11,21 +11,21 @@ module Liszt
 
   # Set up a scoped ordering for this model.
   #
-  # Liszt currently only supports one type of ranking per model. It also doesn't
-  # currently support re-sorting lists when a scope changes. The assumption is
-  # that attributes used as scopes won't change after creation.
+  # Liszt currently only supports one type of ranking per model. It also
+  # doesn't currently support re-sorting lists when a scope changes. The
+  # assumption is that attributes used as scopes won't change after creation.
   #
-  # The other major limitation at the moment is that scopes can't be <tt>nil</tt>.
-  # If a record has nil for a scope value, its associated list will never have
-  # any items in it.
+  # The other major limitation at the moment is that scopes can't be
+  # <tt>nil</tt>.  If a record has nil for a scope value, its associated list
+  # will never have any items in it.
   #
   # @param [Hash] options
   # @option options [Symbol, Array] :scope The attribute or attributes to use
   #   as list constraints.
   # @option options [Hash] :conditions Any extra constraints to impose.
-  # @option options [Proc] :sort_by A lambda to pass into initialize_list! the first
-  #   time an item is added to an uninitialized list. It has the same semantics as
-  #   <tt>Enumerable#sort_by</tt>.
+  # @option options [Proc] :sort_by A lambda to pass into initialize_list! the
+  #   first time an item is added to an uninitialized list. It has the same
+  #   semantics as <tt>Enumerable#sort_by</tt>.
   def acts_as_liszt(options = {})
     extend Instantizeable
     extend ClassMethods

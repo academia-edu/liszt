@@ -79,9 +79,11 @@ module Liszt
     # Push the given id onto the bottom of the list.
     # @param [Fixnum] id
     def push!(id)
-      redis.rpop(@key)
-      redis.rpush(@key, id)
-      redis.rpush(@key, '*')
+      redis.multi do
+        redis.rpop(@key)
+        redis.rpush(@key, id)
+        redis.rpush(@key, '*')
+      end
     end
 
     # Remove the given id from the list.
@@ -92,8 +94,10 @@ module Liszt
 
     # Clear all items from the list.
     def clear
-      redis.del(@key)
-      redis.rpush(@key, '*')
+      redis.multi do
+        redis.del(@key)
+        redis.rpush(@key, '*')
+      end
     end
 
     # Return the number of ids in the list, or nil if it's uninitialized.
