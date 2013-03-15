@@ -53,7 +53,7 @@ module Liszt
     end
 
     def initialize_list!(obj={}, &block)
-      objects = find(:all, :conditions => liszt_query(obj))
+      objects = liszt_relation(obj).to_a
 
       # If the caller provided a block, or if they passed in a default
       # with the :sort_by option, sort the objects by that block's
@@ -97,14 +97,14 @@ module Liszt
       # If ordered_list_ids just did the initialization, we can trust that
       # the list of ids is accurate and ignore the force_refresh flag.
       if force_refresh and was_initialized
-        objs = find(:all, :conditions => liszt_query(obj))
+        objs = liszt_relation(obj).to_a
         real_ids = objs.map(&:id)
         unlisted_ids = real_ids - ids
         if unlisted_ids.count > 0
           ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
         end
       else
-        objs = find(:all, :conditions => ['id in (?)', ids])
+        objs = where('id in (?)', ids).to_a
       end
 
       objs.sort_by { |obj| ids.index(obj.id) }
@@ -124,9 +124,9 @@ module Liszt
       key
     end
 
-    # Return the query that retrieves objects eligible to be
-    # in the list that includes the given object.
-    def liszt_query(obj={})
+    # Return a relation/scope containing objects eligible to be in the list
+    # that includes the given object.
+    def liszt_relation(obj={})
       if @liszt_query.nil?
         query = ['1 = 1']
 
@@ -147,7 +147,7 @@ module Liszt
         @liszt_query = query
       end
 
-      @liszt_query + @liszt_scope.map { |scope| obj[scope] }
+      where(@liszt_query + @liszt_scope.map { |scope| obj[scope] })
     end
   end
 
@@ -211,4 +211,5 @@ module Liszt
   end
 end
 
+# @@ TODO: use an actual railtie
 ActiveRecord::Base.extend Liszt
