@@ -99,6 +99,16 @@ describe Liszt do
         assert @person.ordered_list_items(:force_refresh => true).include?(@person)
         assert @person.ordered_list_ids.include?(@person.id)
       end
+
+      it "removes incorrect items from the list when force_refresh is true" do
+        @person.save
+        @person.ordered_list.push(12314231)
+        assert @person.ordered_list_ids.include?(12314231)
+        @person.ordered_list_items
+        assert @person.ordered_list_ids.include?(12314231)
+        @person.ordered_list_items(:force_refresh => true)
+        refute @person.ordered_list_ids.include?(12314231)
+      end
     end
   end
 
@@ -159,6 +169,51 @@ describe Liszt do
       assert_equal Group.ordered_list_ids, [1, 2, 3]
       g.update_attributes is_bar: nil
       assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
+    end
+  end
+
+  describe ".update_ordered_list" do
+    before do
+      @nelson = people(:nelson)
+      @nelson.initialize_list!
+      @id1, @id2, @id3, @id4 = @nelson.ordered_list_ids
+    end
+
+    describe "when the existing list is missing elements from the db" do
+      before do
+        @nelson.ordered_list.remove @id3
+        @nelson.ordered_list_ids.must_equal [@id1, @id2, @id4]
+      end
+
+      describe "and the user also didn't provide them" do
+        it "prepends those elements to the list" #do
+        #   @nelson.update_ordered_list [@id4, @id2, @id1]
+        #   @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
+        # end
+
+        it "appends those elements to the list if :append_new_items"
+      end
+
+      describe "and the user provided them as part of their ordering" do
+        it "adds those elements where the user provided them" #do
+        #   @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
+        #   @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
+        # end
+      end
+
+      describe "and the user provided one but not another" do
+        it "prepends the one that wasn't provided"
+        it "adds the one that was provided in the correct place"
+      end
+    end
+
+    describe "when the existing list contains extra elements" do
+      it "removes those elements from the list"
+      it "ignores those elements if given by the user"
+    end
+
+    describe "when the list given by the user omits needed elements" do
+      it "leaves them in place"
     end
   end
 end

@@ -90,23 +90,31 @@ module Liszt
 
     def ordered_list_items(obj={}, opts={})
       force_refresh = opts.delete(:force_refresh) || false
-      was_initialized = ordered_list_initialized?(obj)
-      ids = ordered_list_ids(obj)
+      previously_initialized = ordered_list_initialized?(obj)
 
-      # If ordered_list_ids just did the initialization, we can trust that
-      # the list of ids is accurate and ignore the force_refresh flag.
-      if force_refresh and was_initialized
-        objs = liszt_relation(obj).to_a
-        real_ids = objs.map(&:id)
-        unlisted_ids = real_ids - ids
-        if unlisted_ids.count > 0
-          ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
-        end
+      # If the list isn't initialized already, we can trust ordered_list_ids to
+      # do the initialization correctly and ignore the force_refresh flag.
+      if force_refresh && previously_initialized
+        refresh_ordered_list(obj)
       else
-        objs = where('id in (?)', ids).to_a
+        list_ids = ordered_list_ids(obj)
+        records  = where('id in (?)', list_ids).to_a
+        records.sort_by { |obj| list_ids.index(obj.id) }
       end
+    end
 
-      objs.sort_by { |obj| ids.index(obj.id) }
+    # Synchronizes the ordered list with the database, returning the relevant
+    # records in order.
+    def refresh_ordered_list(obj={})
+      list_ids = ordered_list_ids(obj)
+      records  = liszt_relation(obj).to_a
+      real_ids = records.map(&:id)
+      new_ids  = @liszt_append_new_items ? (list_ids | real_ids) & real_ids
+                                         : (real_ids | list_ids) & real_ids
+      if new_ids != list_ids
+        ordered_list(obj).clear_and_populate!(new_ids)
+      end
+      records.sort_by { |obj| new_ids.index(obj.id) }
     end
 
     def update_ordered_list(obj={}, new_ids)
