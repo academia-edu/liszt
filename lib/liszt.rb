@@ -59,15 +59,14 @@ module Liszt
       # with the :sort_by option, sort the objects by that block's
       # output before populating the list with their ids. If not, put
       # the objects in descending order by id.
-      ids = if block_given?
-              objects.sort_by(&block).map(&:id)
-            else
-              if @liszt_sort_by
-                objects.sort_by(&@liszt_sort_by).map(&:id)
-              else
-                objects.map(&:id).sort.reverse
-              end
-            end
+      ids = case
+        when block_given?
+          objects.sort_by(&block).map(&:id)
+        when @liszt_sort_by
+          objects.sort_by(&@liszt_sort_by).map(&:id)
+        else
+          objects.map(&:id).sort.reverse
+        end
 
       ordered_list(obj).clear_and_populate!(ids)
       ids
@@ -110,11 +109,15 @@ module Liszt
       objs.sort_by { |obj| ids.index(obj.id) }
     end
 
+    def update_ordered_list(obj={}, new_ids)
+    end
+
     def meets_list_conditions?(obj={})
       @liszt_conditions.all? { |key, value| obj[key] == value }
     end
 
     private
+
     # Return the key for the Redis list that includes the given object.
     def liszt_key(obj={})
       key = "liszt:#{table_name}"
@@ -155,7 +158,7 @@ module Liszt
     def self.included(base)
       base.class_eval do
         after_create :add_to_list
-        after_update :update_list
+        after_update :add_to_or_remove_from_list
         after_destroy :remove_from_list
       end
     end
@@ -175,7 +178,7 @@ module Liszt
       true
     end
 
-    def update_list
+    def add_to_or_remove_from_list
       if meets_list_conditions?
         add_to_list
       else
