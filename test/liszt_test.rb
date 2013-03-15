@@ -99,11 +99,6 @@ describe Liszt do
         assert @person.ordered_list_items(:force_refresh => true).include?(@person)
         assert @person.ordered_list_ids.include?(@person.id)
       end
-
-      it "passes any other options through to the ActiveRecord query" do
-        @person.save
-        assert @person.ordered_list_items(:limit => 2).count == 2
-      end
     end
   end
 

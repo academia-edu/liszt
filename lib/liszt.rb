@@ -97,14 +97,14 @@ module Liszt
       # If ordered_list_ids just did the initialization, we can trust that
       # the list of ids is accurate and ignore the force_refresh flag.
       if force_refresh and was_initialized
-        objs = find(:all, {:conditions => liszt_query(obj)}.merge(opts))
+        objs = find(:all, :conditions => liszt_query(obj))
         real_ids = objs.map(&:id)
         unlisted_ids = real_ids - ids
         if unlisted_ids.count > 0
           ids = ordered_list(obj).clear_and_populate!(unlisted_ids + ids)
         end
       else
-        objs = find(:all, {:conditions => ['id in (?)', ids]}.merge(opts))
+        objs = find(:all, :conditions => ['id in (?)', ids])
       end
 
       objs.sort_by { |obj| ids.index(obj.id) }
