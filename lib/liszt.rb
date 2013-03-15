@@ -110,10 +110,6 @@ module Liszt
       objs.sort_by { |obj| ids.index(obj.id) }
     end
 
-    def clear_list(obj={})
-      ordered_list(obj).clear
-    end
-
     def meets_list_conditions?(obj={})
       @liszt_conditions.all? { |key, value| obj[key] == value }
     end

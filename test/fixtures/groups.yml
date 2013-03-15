@@ -1,8 +1,14 @@
 one:
   id: 1
+  is_foo: true
+  is_bar: 
 
 two:
   id: 2
+  is_foo: true
+  is_bar: 
 
 three:
   id: 3
+  is_foo: true
+  is_bar: 

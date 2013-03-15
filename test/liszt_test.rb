@@ -108,10 +108,6 @@ describe Liszt do
   end
 
   describe "auto-initialization" do
-    before do
-      Group.acts_as_liszt :sort_by => lambda { |o| o.id }
-    end
-
     it "sorts a newly initialized list with the given proc" do
       assert !Group.ordered_list_initialized?
       Group.initialize_list!
@@ -120,10 +116,46 @@ describe Liszt do
     end
 
     it "sorts a newly auto-initialized list with the given proc" do
-      g = Group.new
+      g = Group.new(is_foo: true, is_bar: nil)
       assert !Group.ordered_list_initialized?
       g.save
       assert Group.ordered_list_initialized?
+      assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
+    end
+
+    it "sorts by id descending if there is no proc" do
+      nelson = people(:nelson)
+      refute nelson.ordered_list_initialized?
+      Person.create!(group_id: nelson.group_id, is_male: nelson.is_male)
+      assert nelson.ordered_list_initialized?
+      nelson.ordered_list_ids.must_equal nelson.ordered_list_ids.sort.reverse
+    end
+  end
+
+  describe "with :conditions and :append_new_items" do
+    before do
+      Group.initialize_list!
+      assert Group.ordered_list_initialized?
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
+    end
+
+    it "appends records that meet the conditions" do
+      Group.create!(is_foo: true, is_bar: true)
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
+
+      Group.create!(is_foo: false, is_bar: nil)
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
+
+      g = Group.create!(is_foo: true, is_bar: nil)
+      assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
+    end
+
+    it "inserts/removes records if an update changes the conditions" do
+      g = Group.create!(is_foo: true, is_bar: nil)
+      assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
+      g.update_attributes is_bar: true
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
+      g.update_attributes is_bar: nil
       assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
     end
   end

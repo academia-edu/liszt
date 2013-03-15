@@ -8,3 +8,4 @@ test/app/tmp/
 .rvmrc
 /tags
 /dump.rdb
+coverage/

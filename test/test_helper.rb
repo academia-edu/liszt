@@ -1,37 +1,18 @@
 # encoding: UTF-8
 
+if ENV['COVERAGE']
+  require "simplecov"
+  SimpleCov.start
+end
+
 require "minitest/autorun"
 require "minitest/spec"
 require "liszt"
 require "redis"
+require "logger"
+require "pry"
 
 Liszt.redis = Redis.new(:host => "localhost", :port => "10001")
-
-if ENV['DEBUG_REDIS']
-  class Redis
-    module Connection
-      class Ruby
-        def write(command)
-          $stderr.puts "\n<- #{command}"
-          @sock.write(build_command(command))
-        end
-
-        def format_reply(reply_type, line)
-          reply = case reply_type
-          when MINUS    then format_error_reply(line)
-          when PLUS     then format_status_reply(line)
-          when COLON    then format_integer_reply(line)
-          when DOLLAR   then format_bulk_reply(line)
-          when ASTERISK then format_multi_bulk_reply(line)
-          else raise ProtocolError.new(reply_type)
-          end
-          $stderr.puts "-> #{reply}"
-          reply
-        end
-      end
-    end
-  end
-end
 
 class Array
   def swap(i1, i2)
@@ -54,20 +35,23 @@ ActiveRecord::Base.establish_connection "test"
 
 ActiveRecord::Schema.define do
   create_table "groups", :force => true do |t|
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.boolean "is_foo"
+    t.boolean "is_bar"
+    t.timestamps
   end
 
   create_table "people", :force => true do |t|
     t.string   "name"
     t.integer  "group_id"
     t.boolean  "is_male"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.timestamps
   end
 end
 
 class Group < ActiveRecord::Base
+  acts_as_liszt :sort_by => lambda { |o| o.id },
+    :conditions => { :is_foo => true, :is_bar => nil },
+    :append_new_items => true
 end
 
 class Person < ActiveRecord::Base
@@ -100,4 +84,32 @@ class MiniTest::Spec
   self.fixture_path = "test/fixtures"
 
   fixtures :groups, :people
+end
+
+if ENV['DEBUG']
+  class Redis
+    module Connection
+      class Ruby
+        def write(command)
+          $stderr.puts "\n<- #{command}"
+          @sock.write(build_command(command))
+        end
+
+        def format_reply(reply_type, line)
+          reply = case reply_type
+          when MINUS    then format_error_reply(line)
+          when PLUS     then format_status_reply(line)
+          when COLON    then format_integer_reply(line)
+          when DOLLAR   then format_bulk_reply(line)
+          when ASTERISK then format_multi_bulk_reply(line)
+          else raise ProtocolError.new(reply_type)
+          end
+          $stderr.puts "-> #{reply}"
+          reply
+        end
+      end
+    end
+  end
+
+  ActiveRecord::Base.logger = Logger.new(STDOUT)
 end
