@@ -170,11 +170,7 @@ module Liszt
           end
         end
       else
-        if self.class.liszt_sort_by
-          initialize_list! &self.class.liszt_sort_by
-        else
-          initialize_list!
-        end
+        initialize_list!
       end
       true
     end

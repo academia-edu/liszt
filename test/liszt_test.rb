@@ -110,12 +110,19 @@ describe Liszt do
       assert_equal Group.ordered_list_ids, [1, 2, 3]
     end
 
-    it "sorts a newly auto-initialized list with the given proc" do
+    it "sorts a newly auto-initialized (by record creation) list" do
       g = Group.new(is_foo: true, is_bar: nil)
       assert !Group.ordered_list_initialized?
       g.save
       assert Group.ordered_list_initialized?
       assert_equal Group.ordered_list_ids, [1, 2, 3, g.id]
+    end
+
+    it "sorts a newly auto-initialized (by querying) list" do
+      assert !Group.ordered_list_initialized?
+      Group.ordered_list_items
+      assert Group.ordered_list_initialized?
+      assert_equal Group.ordered_list_ids, [1, 2, 3]
     end
 
     it "sorts by id descending if there is no proc" do
