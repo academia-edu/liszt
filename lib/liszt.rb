@@ -127,15 +127,14 @@ module Liszt
       records.sort_by { |obj| merged_ids.index(obj.id) }
     end
 
-    def update_ordered_list(obj, new_ids, options = {})
+    # Update the given object's list with the given ids. Returns the final list
+    # of ids, which may be different from the given list if the given list was
+    # inconsistent with the database.
+    def update_ordered_list(obj, new_ids)
       records    = ordered_list_items(obj, force_refresh: true)
       real_ids   = records.map(&:id)
       merged_ids = Liszt.merge_id_lists(
                      real_ids, new_ids, @liszt_append_new_items)
-
-      if merged_ids != new_ids && options[:on_inconsistency]
-        options[:on_inconsistency].call(new_ids, real_ids)
-      end
 
       ordered_list(obj).clear_and_populate!(merged_ids)
     end

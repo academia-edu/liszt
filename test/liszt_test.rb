@@ -173,19 +173,6 @@ describe Liszt do
   end
 
   describe ".update_ordered_list" do
-    def assert_callback
-      mock = MiniTest::Mock.new
-      mock.expect(:call, nil, [Array, Array])
-      yield mock
-      mock.verify
-    end
-
-    def refute_callback
-      mock = MiniTest::Mock.new
-      yield mock
-      mock.verify
-    end
-
     before do
       @nelson = people(:nelson)
       @nelson.initialize_list!
@@ -193,10 +180,8 @@ describe Liszt do
     end
 
     it "reorders the elements based on the given list" do
-      refute_callback do |mock_proc|
-        @nelson.update_ordered_list [@id4, @id3, @id2, @id1],
-          on_inconsistency: mock_proc
-      end
+      retval = @nelson.update_ordered_list [@id4, @id3, @id2, @id1]
+      retval.must_equal [@id4, @id3, @id2, @id1]
       @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
     end
 
@@ -208,20 +193,15 @@ describe Liszt do
 
       describe "and the user also didn't provide them" do
         it "prepends those elements to the list" do
-          assert_callback do |mock_proc|
-            @nelson.update_ordered_list [@id4, @id2, @id1],
-              on_inconsistency: mock_proc
-          end
+          retval = @nelson.update_ordered_list [@id4, @id2, @id1]
+          retval.must_equal [@id3, @id4, @id2, @id1]
           @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
         end
       end
 
       describe "and the user provided them as part of their ordering" do
         it "adds those elements where the user provided them" do
-          refute_callback do |mock_proc|
-            @nelson.update_ordered_list [@id4, @id2, @id3, @id1],
-              on_inconsistency: mock_proc
-          end
+          @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
           @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
         end
       end
@@ -232,10 +212,7 @@ describe Liszt do
         end
 
         it "prepends only the one that wasn't provided" do
-          assert_callback do |mock_proc|
-            @nelson.update_ordered_list [@id4, @id2, @id1],
-              on_inconsistency: mock_proc
-          end
+          @nelson.update_ordered_list [@id4, @id2, @id1]
           @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
         end
       end
@@ -247,38 +224,26 @@ describe Liszt do
       end
 
       it "removes those elements from the list" do
-        refute_callback do |mock_proc|
-          @nelson.update_ordered_list [@id4, @id3, @id2, @id1],
-            on_inconsistency: mock_proc
-        end
+        @nelson.update_ordered_list [@id4, @id3, @id2, @id1]
         @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
       end
 
       it "ignores those elements if given by the user" do
-        assert_callback do |mock_proc|
-          @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1],
-            on_inconsistency: mock_proc
-        end
+        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
         @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
       end
     end
 
     describe "when the list given by the user omits needed elements" do
       it "prepends them to the list" do
-        assert_callback do |mock_proc|
-          @nelson.update_ordered_list [@id4, @id3, @id1],
-            on_inconsistency: mock_proc
-        end
+        @nelson.update_ordered_list [@id4, @id3, @id1]
         @nelson.ordered_list_ids.must_equal [@id2, @id4, @id3, @id1]
       end
     end
 
     describe "when the list given by the user contains nonexistent elements" do
       it "ignores them and calls back" do
-        assert_callback do |mock_proc|
-          @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1],
-            on_inconsistency: mock_proc
-        end
+        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
         @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
       end
     end
