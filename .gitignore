@@ -9,3 +9,4 @@ test/app/tmp/
 /tags
 /dump.rdb
 coverage/
+Gemfile.lock
