@@ -7,6 +7,14 @@ require "active_record"
 module Liszt
   class << self
     attr_accessor :redis
+
+    def merge_id_lists(canonical, modified, append = false)
+      if append
+        (modified + (canonical - modified)) & canonical
+      else
+        ((canonical - modified) + modified) & canonical
+      end
+    end
   end
 
   # Set up a scoped ordering for this model.
@@ -109,7 +117,8 @@ module Liszt
       list_ids   = ordered_list_ids(obj)
       records    = liszt_relation(obj).to_a
       real_ids   = records.map(&:id)
-      merged_ids = merge_id_lists(real_ids, list_ids)
+      merged_ids = Liszt.merge_id_lists(
+                     real_ids, list_ids, @liszt_append_new_items)
 
       if merged_ids != list_ids
         ordered_list(obj).clear_and_populate!(merged_ids)
@@ -121,18 +130,10 @@ module Liszt
     def update_ordered_list(obj={}, new_ids)
       records    = ordered_list_items(obj, force_refresh: true)
       real_ids   = records.map(&:id)
-      merged_ids = merge_id_lists(real_ids, new_ids)
+      merged_ids = Liszt.merge_id_lists(
+                     real_ids, new_ids, @liszt_append_new_items)
 
       ordered_list(obj).clear_and_populate!(merged_ids)
-    end
-
-    # @@ TODO: put this somewhere else
-    def merge_id_lists(canonical, modified)
-      if @liszt_append_new_items
-        (modified + (canonical - modified)) & canonical
-      else
-        ((canonical - modified) + modified) & canonical
-      end
     end
 
     def meets_list_conditions?(obj={})
