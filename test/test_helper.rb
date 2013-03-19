@@ -8,6 +8,7 @@ end
 require "minitest/autorun"
 require "minitest/spec"
 require "minitest/pride"
+require "minitest/mock"
 
 require "liszt"
 require "redis"
