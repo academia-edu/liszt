@@ -186,34 +186,78 @@ describe Liszt do
       end
 
       describe "and the user also didn't provide them" do
-        it "prepends those elements to the list" #do
-        #   @nelson.update_ordered_list [@id4, @id2, @id1]
-        #   @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
-        # end
-
-        it "appends those elements to the list if :append_new_items"
+        it "prepends those elements to the list" do
+          @nelson.update_ordered_list [@id4, @id2, @id1]
+          @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
+        end
       end
 
       describe "and the user provided them as part of their ordering" do
-        it "adds those elements where the user provided them" #do
-        #   @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
-        #   @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
-        # end
+        it "adds those elements where the user provided them" do
+          @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
+          @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
+        end
       end
 
       describe "and the user provided one but not another" do
-        it "prepends the one that wasn't provided"
-        it "adds the one that was provided in the correct place"
+        before do
+          @nelson.ordered_list.remove @id2
+        end
+
+        it "prepends only the one that wasn't provided" do
+          @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
+          @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
+        end
       end
     end
 
     describe "when the existing list contains extra elements" do
-      it "removes those elements from the list"
-      it "ignores those elements if given by the user"
+      before do
+        @nelson.ordered_list << 123
+      end
+
+      it "removes those elements from the list" do
+        @nelson.update_ordered_list [@id4, @id3, @id2, @id1]
+        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+      end
+
+      it "ignores those elements if given by the user" do
+        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
+        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+      end
     end
 
     describe "when the list given by the user omits needed elements" do
-      it "leaves them in place"
+      it "prepends them to the list" do
+        @nelson.update_ordered_list [@id4, @id3, @id1]
+        @nelson.ordered_list_ids.must_equal [@id2, @id4, @id3, @id1]
+      end
+    end
+
+    describe "when the list given by the user contains nonexistent elements" do
+      it "ignores them" do
+        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
+        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+      end
+    end
+  end
+
+  describe ".update_ordered_list with :append_new_items" do
+    it "appends missing elements to the list" do
+      group = groups(:one)
+      group.initialize_list!
+      id1, id2, id3 = group.ordered_list_ids
+
+      group.ordered_list.remove id2
+      group.ordered_list_ids.must_equal [id1, id3]
+
+      group.update_ordered_list [id3, id1]
+
+      group.ordered_list_ids.must_equal [id3, id1, id2]
+
+      group.update_ordered_list [id1, id2]
+
+      group.ordered_list_ids.must_equal [id1, id2, id3]
     end
   end
 end
