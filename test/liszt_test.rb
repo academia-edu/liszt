@@ -173,6 +173,13 @@ describe Liszt do
   end
 
   describe ".update_ordered_list" do
+    # check both the retval and the actual list
+    def assert_update(input, desired_result)
+      actual_result = @nelson.update_ordered_list input
+      actual_result.must_equal desired_result
+      @nelson.ordered_list_ids.must_equal desired_result
+    end
+
     before do
       @nelson = people(:nelson)
       @nelson.initialize_list!
@@ -180,9 +187,7 @@ describe Liszt do
     end
 
     it "reorders the elements based on the given list" do
-      retval = @nelson.update_ordered_list [@id4, @id3, @id2, @id1]
-      retval.must_equal [@id4, @id3, @id2, @id1]
-      @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+      assert_update [@id4, @id3, @id2, @id1], [@id4, @id3, @id2, @id1]
     end
 
     describe "when the existing list is missing elements from the db" do
@@ -193,16 +198,13 @@ describe Liszt do
 
       describe "and the user also didn't provide them" do
         it "prepends those elements to the list" do
-          retval = @nelson.update_ordered_list [@id4, @id2, @id1]
-          retval.must_equal [@id3, @id4, @id2, @id1]
-          @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
+          assert_update [@id4, @id2, @id1], [@id3, @id4, @id2, @id1]
         end
       end
 
       describe "and the user provided them as part of their ordering" do
         it "adds those elements where the user provided them" do
-          @nelson.update_ordered_list [@id4, @id2, @id3, @id1]
-          @nelson.ordered_list_ids.must_equal [@id4, @id2, @id3, @id1]
+          assert_update [@id4, @id2, @id3, @id1], [@id4, @id2, @id3, @id1]
         end
       end
 
@@ -212,8 +214,7 @@ describe Liszt do
         end
 
         it "prepends only the one that wasn't provided" do
-          @nelson.update_ordered_list [@id4, @id2, @id1]
-          @nelson.ordered_list_ids.must_equal [@id3, @id4, @id2, @id1]
+          assert_update [@id4, @id2, @id1], [@id3, @id4, @id2, @id1]
         end
       end
     end
@@ -224,27 +225,29 @@ describe Liszt do
       end
 
       it "removes those elements from the list" do
-        @nelson.update_ordered_list [@id4, @id3, @id2, @id1]
-        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+        assert_update [@id4, @id3, @id2, @id1], [@id4, @id3, @id2, @id1]
       end
 
       it "ignores those elements if given by the user" do
-        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
-        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+        assert_update [@id4, @id3, 123, @id2, @id1], [@id4, @id3, @id2, @id1]
       end
     end
 
     describe "when the list given by the user omits needed elements" do
-      it "prepends them to the list" do
-        @nelson.update_ordered_list [@id4, @id3, @id1]
-        @nelson.ordered_list_ids.must_equal [@id2, @id4, @id3, @id1]
+      it "prepends them to the list in their existing order" do
+        assert_update [@id3], [@id1, @id2, @id4, @id3]
+      end
+    end
+
+    describe "when the list given by the user is empty" do
+      it "preserves the existing order" do
+        assert_update [], [@id1, @id2, @id3, @id4]
       end
     end
 
     describe "when the list given by the user contains nonexistent elements" do
       it "ignores them and calls back" do
-        @nelson.update_ordered_list [@id4, @id3, 123, @id2, @id1]
-        @nelson.ordered_list_ids.must_equal [@id4, @id3, @id2, @id1]
+        assert_update [@id4, @id3, 123, @id2, @id1], [@id4, @id3, @id2, @id1]
       end
     end
   end
