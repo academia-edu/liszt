@@ -1,6 +1,7 @@
 require "liszt/version"
 require "liszt/instantizeable"
 require "liszt/redis_list"
+require "liszt/railtie"  if defined?(Rails::Railtie)
 
 require "active_record"
 
@@ -238,4 +239,4 @@ module Liszt
 end
 
 # @@ TODO: use an actual railtie
-ActiveRecord::Base.extend Liszt
+ActiveRecord::Base.extend Liszt unless defined?(Rails::Railtie)
