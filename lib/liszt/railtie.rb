@@ -3,7 +3,7 @@ require 'rails'
 
 module Liszt
   class Railtie < Rails::Railtie
-    initializer "extend ActiveRecord::Base" do
+    config.after_initialize do
       ActiveRecord::Base.extend Liszt
     end
   end
