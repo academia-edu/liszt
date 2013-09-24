@@ -238,5 +238,4 @@ module Liszt
   end
 end
 
-# @@ TODO: use an actual railtie
 ActiveRecord::Base.extend Liszt unless defined?(Rails::Railtie)
