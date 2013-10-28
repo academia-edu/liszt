@@ -86,11 +86,11 @@ describe Liszt do
         @person = Person.new(:name => "John Smith", :group_id => 1, :is_male => true)
       end
 
-      it "doesn't confirm the list when force_refresh is nil" do
+      it "confirms the list when force_refresh is nil but records and sort order don't match" do
         @person.save
         @person.remove_from_list
-        assert !@person.ordered_list_items.include?(@person)
-        assert !@person.ordered_list_ids.include?(@person.id)
+        assert @person.ordered_list_items.include?(@person)
+        assert @person.ordered_list_ids.include?(@person.id)
       end
 
       it "confirms the list when force_refresh is true" do
@@ -100,11 +100,17 @@ describe Liszt do
         assert @person.ordered_list_ids.include?(@person.id)
       end
 
-      it "removes incorrect items from the list when force_refresh is true" do
+      it "removes incorrect items from the list when force_refresh is not true" do
         @person.save
         @person.ordered_list.push(12314231)
         assert @person.ordered_list_ids.include?(12314231)
         @person.ordered_list_items
+        refute @person.ordered_list_ids.include?(12314231)
+      end
+
+      it "removes incorrect items from the list when force_refresh is true" do
+        @person.save
+        @person.ordered_list.push(12314231)
         assert @person.ordered_list_ids.include?(12314231)
         @person.ordered_list_items(:force_refresh => true)
         refute @person.ordered_list_ids.include?(12314231)

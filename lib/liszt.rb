@@ -107,8 +107,14 @@ module Liszt
         refresh_ordered_list(obj)
       else
         list_ids = ordered_list_ids(obj)
-        records  = where('id in (?)', list_ids).to_a
-        records.sort_by { |obj| list_ids.index(obj.id) }
+        records  = liszt_relation(obj).to_a
+        real_ids = records.map(&:id)
+
+        if real_ids.to_set == list_ids.to_set
+          records.sort_by { |obj| list_ids.index(obj.id) }
+        else
+          refresh_ordered_records obj, list_ids, records, real_ids
+        end
       end
     end
 
@@ -118,14 +124,8 @@ module Liszt
       list_ids   = ordered_list_ids(obj)
       records    = liszt_relation(obj).to_a
       real_ids   = records.map(&:id)
-      merged_ids = Liszt.merge_id_lists(
-                     real_ids, list_ids, @liszt_append_new_items)
 
-      if merged_ids != list_ids
-        ordered_list(obj).clear_and_populate!(merged_ids)
-      end
-
-      records.sort_by { |obj| merged_ids.index(obj.id) }
+      refresh_ordered_records obj, list_ids, records, real_ids
     end
 
     # Update the given object's list with the given ids. Returns the final list
@@ -145,6 +145,17 @@ module Liszt
     end
 
     private
+
+    def refresh_ordered_records(obj, list_ids, records, real_ids)
+      merged_ids = Liszt.merge_id_lists(
+                     real_ids, list_ids, @liszt_append_new_items)
+
+      if merged_ids != list_ids
+        ordered_list(obj).clear_and_populate!(merged_ids)
+      end
+
+      records.sort_by { |obj| merged_ids.index(obj.id) }
+    end
 
     # Return the key for the Redis list that includes the given object.
     def liszt_key(obj={})
